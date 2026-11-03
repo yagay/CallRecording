@@ -274,6 +274,7 @@ public class Init implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (!"com.google.android.dialer".equals(lpparam.packageName)) return;
+        RecordingTimingHook.markModuleLoaded();
         RecordingTimingHook.installCallState();
         new Thread(() -> {
             try (var dex = new DexHelper(lpparam.classLoader)) {
