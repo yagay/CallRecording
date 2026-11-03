@@ -1,0 +1,19 @@
+<resources>
+    <string name="auto_title">通话录音</string>
+    <string name="auto_subtitle">Google 电话 LSPosed 模块，复用拨号器原生录音引擎。</string>
+    <string name="auto_section">自动录音</string>
+    <string name="auto_all">所有通话自动录音</string>
+    <string name="auto_all_description">包含来电、去电、全部联系人和陌生号码，无须逐个添加联系人。</string>
+    <string name="auto_debug">详细诊断日志</string>
+    <string name="auto_debug_description">记录 Hook 定位和错误，不收集电话号码。</string>
+    <string name="auto_status_heading">Hook 状态</string>
+    <string name="auto_status_unknown">尚未检测。请重新启动 Google 电话后刷新。</string>
+    <string name="auto_status_installed">已 Hook 原生录音策略，尚不代表已成功保存录音。</string>
+    <string name="auto_status_not_found">没有找到唯一匹配的自动录音策略，保留原始行为。</string>
+    <string name="auto_status_factory">未验证原生异步结果工厂，保留原始行为。</string>
+    <string name="auto_status_error">Hook 安装失败，保留原始行为。</string>
+    <string name="auto_last_check">上次检测</string>
+    <string name="auto_last_hit">上次录音判断</string>
+    <string name="auto_refresh">刷新状态</string>
+    <string name="auto_notice">Hook 命中不代表录音成功。Google 电话仍需原生录音权限及音频支持。请按相关法律要求告知通话参与者。</string>
+</resources>
