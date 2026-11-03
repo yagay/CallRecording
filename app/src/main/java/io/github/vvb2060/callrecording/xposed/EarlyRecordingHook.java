@@ -52,10 +52,11 @@ final class EarlyRecordingHook {
                         if (!(original instanceof Future<?>)) return;
                         if (((Future<?>) original).isDone()) return;
 
-                        // Reuse only the native factory verified by the
-                        // eligibility hook. The expected disclosure result
-                        // type is Void (null), not a boolean.
-                        Object ready = AutoRecordingHook.completedVoidFuture();
+                        // Google Phone 244's next transform unboxes a Boolean.
+                        // The previous Future<Void>/null replacement stopped
+                        // the recording chain: no Google recording was saved.
+                        // Reuse the verified native completed Boolean.TRUE.
+                        Object ready = AutoRecordingHook.completedTrueFuture();
                         if (!disclosure.getReturnType().isInstance(ready)) return;
 
                         if (!LAST_RELEASED_POLICY.compareAndSet(
@@ -65,6 +66,7 @@ final class EarlyRecordingHook {
                         // Only the dependency chain can advance immediately.
                         param.setResult(ready);
                         RecordingTimingHook.markEarlyRelease();
+                        XposedBridge.log(TAG + ": native Boolean.TRUE continuation released; original notice still running");
                     } catch (Throwable e) {
                         // Fail closed. No change to Google's original Future.
                         Log.w(TAG, "Early release refused, original flow kept", e);
