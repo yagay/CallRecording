@@ -72,6 +72,20 @@ final class RecordingTimingHook {
         }
     }
 
+    /** Restrict early recording to a currently active automatic call. */
+    static long currentEarlyPolicyTimestamp() {
+        long now = SystemClock.elapsedRealtime();
+        long started = connectedAt;
+        long policy = policyAt;
+        if (lastActiveCall == null || started <= 0 || policy < started
+                || policy > now || now - policy > 2500L) return -1L;
+        return policy;
+    }
+
+    static void markEarlyRelease() {
+        event("disclosure-continues-recorder-released-early");
+    }
+
     static void markAutoPolicy() {
         policyAt = SystemClock.elapsedRealtime();
         event("automatic-policy-accepted");
@@ -96,6 +110,9 @@ final class RecordingTimingHook {
                         event("disclosure-requested");
                     }
                 });
+                // Install separately so the passive timing hook remains useful
+                // with the experimental early-start switch disabled.
+                EarlyRecordingHook.install(disclose);
             } else {
                 event("disclosure-method-unavailable");
             }
