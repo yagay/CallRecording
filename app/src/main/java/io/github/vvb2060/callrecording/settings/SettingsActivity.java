@@ -39,6 +39,8 @@ public final class SettingsActivity extends Activity {
 
         setting(content, R.string.auto_all, R.string.auto_all_description,
                 SettingsProvider.AUTO, true);
+        setting(content, R.string.auto_early, R.string.auto_early_description,
+                SettingsProvider.EARLY, false);
         setting(content, R.string.auto_debug, R.string.auto_debug_description,
                 SettingsProvider.DEBUG, false);
 

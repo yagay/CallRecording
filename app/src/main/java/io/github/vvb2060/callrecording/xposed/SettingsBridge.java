@@ -18,6 +18,11 @@ final class SettingsBridge {
         return options != null && options.getBoolean("auto_record_all", false);
     }
 
+    static boolean earlyRecordingEnabled() {
+        Bundle options = read();
+        return options != null && options.getBoolean("early_native_recording", false);
+    }
+
     static boolean diagnosticsEnabled() {
         Bundle options = read();
         return options != null && options.getBoolean("diagnostic_logging", false);

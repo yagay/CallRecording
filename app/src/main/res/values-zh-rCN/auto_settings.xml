@@ -4,6 +4,8 @@
     <string name="auto_section">自动录音</string>
     <string name="auto_all">所有通话自动录音</string>
     <string name="auto_all_description">包含来电、去电、全部联系人和陌生号码，无须逐个添加联系人。</string>
+    <string name="auto_early">接通后尽早开始录音（实验性）</string>
+    <string name="auto_early_description">录音资格通过后不再等待提示播放结束，原有提示继续执行。可能同时录入提示音，其他 Google 电话版本可能不兼容。默认关闭，请确保通话参与者知情。</string>
     <string name="auto_debug">详细诊断日志</string>
     <string name="auto_debug_description">记录 Hook 定位和错误，不收集电话号码。</string>
     <string name="auto_status_heading">Hook 状态</string>

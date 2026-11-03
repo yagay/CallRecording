@@ -26,6 +26,7 @@ public final class AutoRecordingHook {
     private static final String POLICY_MARKER = "produceShouldStartAutomaticRecordingForContact";
     private static final AtomicBoolean INSTALLED = new AtomicBoolean();
     private static final AtomicBoolean FIRST_HIT = new AtomicBoolean();
+    private static volatile Method completedFutureFactory;
 
     private AutoRecordingHook() {}
 
@@ -65,6 +66,7 @@ public final class AutoRecordingHook {
                         }
                     }
                 });
+                completedFutureFactory = factory;
                 status("installed", "Policy hooked: " + policy);
             } catch (Throwable error) {
                 INSTALLED.set(false);
@@ -72,6 +74,27 @@ public final class AutoRecordingHook {
             }
         } catch (Throwable error) {
             status("error", "Discovery failed safely: " + error);
+        }
+    }
+
+    /**
+     * The Google Phone 244 start-disclosure continuation consumes Boolean,
+     * not Void: Lkxn.apply (case 5) unboxes Boolean.booleanValue().
+     *
+     * Return only a verified completed Future<Boolean.TRUE>. A null result
+     * causes the continuation to fail before CallRecorder.startRecording().
+     */
+    static Object completedTrueFuture() {
+        Method factory = completedFutureFactory;
+        if (factory == null) return null;
+        try {
+            Object value = factory.invoke(null, Boolean.TRUE);
+            if (!(value instanceof Future<?>)) return null;
+            Future<?> future = (Future<?>) value;
+            if (!future.isDone() || !Boolean.TRUE.equals(future.get())) return null;
+            return value;
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 
