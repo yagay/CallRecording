@@ -25,8 +25,10 @@ Only for newly connected eligible *automatic* calls, the module:
    to run, so the start notification is still requested normally.
 2. Does not wait for that future to finish before the existing native
    recording-start continuation is scheduled.
-3. Returns a verified completed native Future<Void> from the module's already
-   discovered Future factory, preserving the expected return type.
+3. Returns a verified completed native Future<Boolean.TRUE> from the module's
+   already discovered Future factory. The Google Phone 244 continuation
+   unboxes a Boolean: returning Future<Void> / null in the first experiment
+   broke native recording startup and produced no Google Phone recording.
 
 It does **not** invoke the recorder manually and does not hide Google Phone's
 recording indicator. The original asynchronous disclosure may overlap with the
@@ -40,6 +42,20 @@ hit in the last 2500 ms. Otherwise the original Google Phone flow is unchanged.
 guarantee. The automatic recording policy itself took 323 ms in the measured
 call, and audio capture initialization occurs after the recorder's start
 request.
+
+## Experimental v2 fix
+
+The user's 2026-11-03 on-device test demonstrated that the original
+Future<Void>/null substitution produced **no Google Phone recording**, while
+the independent BCR app recorded the same call fully. Static DEX review of
+Google Phone 244 (the `Lkxn.apply` case 5 continuation) found an explicit
+`Boolean.booleanValue()` call on the returned value, explaining the failed
+chain. The experimental replacement now uses a verified completed native
+Future<Boolean.TRUE> instead.
+
+This is a **hypothesis-backed correction, not a verified success**. Actual
+recording and audible start notice must both be tested. The switch remains
+off by default.
 
 ## Testing
 
