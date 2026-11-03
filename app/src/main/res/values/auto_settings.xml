@@ -1,6 +1,6 @@
 <resources>
     <string name="auto_title">Call Recording</string>
-    <string name="auto_subtitle">Google Phone LSPosed module. Uses the phone app's native recording engine.</string>
+    <string name="auto_subtitle">Google Phone LSPosed module. Uses the phone app\'s native recording engine.</string>
     <string name="auto_section">Automatic recording</string>
     <string name="auto_all">Automatically record all calls</string>
     <string name="auto_all_description">All incoming and outgoing calls, saved contacts and unknown numbers; no contact list needed.</string>
