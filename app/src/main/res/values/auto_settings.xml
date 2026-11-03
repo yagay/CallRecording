@@ -1,0 +1,19 @@
+<resources>
+    <string name="auto_title">Call Recording</string>
+    <string name="auto_subtitle">Google Phone LSPosed module. Uses the phone app's native recording engine.</string>
+    <string name="auto_section">Automatic recording</string>
+    <string name="auto_all">Automatically record all calls</string>
+    <string name="auto_all_description">All incoming and outgoing calls, saved contacts and unknown numbers; no contact list needed.</string>
+    <string name="auto_debug">Diagnostic logging</string>
+    <string name="auto_debug_description">Log policy detection and errors without collecting phone numbers.</string>
+    <string name="auto_status_heading">Hook status</string>
+    <string name="auto_status_unknown">Not checked. Restart Google Phone, then refresh.</string>
+    <string name="auto_status_installed">Native recording policy hooked; a recording file is not yet confirmed.</string>
+    <string name="auto_status_not_found">No uniquely compatible recording policy found. Original behavior retained.</string>
+    <string name="auto_status_factory">Could not verify the native asynchronous result factory. Original behavior retained.</string>
+    <string name="auto_status_error">Hook installation failed. Original behavior retained.</string>
+    <string name="auto_last_check">Last detection</string>
+    <string name="auto_last_hit">Last recording decision</string>
+    <string name="auto_refresh">Refresh status</string>
+    <string name="auto_notice">A hook hit is not proof of a recorded call. Google Phone still requires native audio support and permissions. Keep participants appropriately informed and follow applicable recording laws.</string>
+</resources>

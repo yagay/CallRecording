@@ -280,6 +280,7 @@ public class Init implements IXposedHookLoadPackage {
                 hookWithinCrosbyGeoFence(dex);
                 hookGetSupportedLocaleFromCountryCode(dex);
                 hookIsCallRecordingCountry(dex);
+                AutoRecordingHook.install(dex);
             }
             hookSynthesizeToFile();
             hookDispatchOnInit();
