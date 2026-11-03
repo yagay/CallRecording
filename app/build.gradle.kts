@@ -18,8 +18,8 @@ android {
     enableKotlin = false
     namespace = "io.github.vvb2060.callrecording"
     defaultConfig {
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4-auto"
         externalNativeBuild {
             ndkBuild {
                 abiFilters += listOf("arm64-v8a")
