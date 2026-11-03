@@ -4,6 +4,8 @@
     <string name="auto_section">Automatic recording</string>
     <string name="auto_all">Automatically record all calls</string>
     <string name="auto_all_description">All incoming and outgoing calls, saved contacts and unknown numbers; no contact list needed.</string>
+    <string name="auto_early">Start recording without waiting for the disclosure</string>
+    <string name="auto_early_description">Experimental: request native recording as soon as the auto-record decision passes, while the original notice continues. May record the beep and may fail on other Google Phone versions. Default off. Keep participants informed.</string>
     <string name="auto_debug">Diagnostic logging</string>
     <string name="auto_debug_description">Log policy detection and errors without collecting phone numbers.</string>
     <string name="auto_status_heading">Hook status</string>
