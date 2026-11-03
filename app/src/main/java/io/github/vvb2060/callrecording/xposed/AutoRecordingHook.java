@@ -52,6 +52,7 @@ public final class AutoRecordingHook {
                             Object immediateTrue = factory.invoke(null, Boolean.TRUE);
                             if (!policy.getReturnType().isInstance(immediateTrue)) return;
                             param.setResult(immediateTrue);
+                            RecordingTimingHook.markAutoPolicy();
                             if (FIRST_HIT.compareAndSet(false, true)) {
                                 SettingsBridge.report("hit");
                                 XposedBridge.log(TAG + ": first eligibility override");
