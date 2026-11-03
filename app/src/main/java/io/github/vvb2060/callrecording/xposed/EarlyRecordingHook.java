@@ -41,23 +41,40 @@ final class EarlyRecordingHook {
             XposedBridge.hookMethod(disclosure, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
-                    if (!SettingsBridge.earlyRecordingEnabled()
-                            || !SettingsBridge.allCallsEnabled()
-                            || param.hasThrowable()) return;
+                    boolean earlyEnabled = SettingsBridge.earlyRecordingEnabled();
+                    boolean autoEnabled = SettingsBridge.allCallsEnabled();
+                    if (!earlyEnabled || !autoEnabled || param.hasThrowable()) {
+                        XposedBridge.log(TAG + ": disclosure hook not applied; earlyEnabled="
+                                + earlyEnabled + " autoEnabled=" + autoEnabled
+                                + " originalThrew=" + param.hasThrowable());
+                        return;
+                    }
                     try {
                         long policy = RecordingTimingHook.currentEarlyPolicyTimestamp();
-                        if (policy <= 0 || LAST_RELEASED_POLICY.get() == policy) return;
+                        if (policy <= 0 || LAST_RELEASED_POLICY.get() == policy) {
+                            XposedBridge.log(TAG + ": disclosure hook not applied; active-policy-window-or-duplicate");
+                            return;
+                        }
 
                         Object original = param.getResult();
-                        if (!(original instanceof Future<?>)) return;
-                        if (((Future<?>) original).isDone()) return;
+                        if (!(original instanceof Future<?>)) {
+                            XposedBridge.log(TAG + ": disclosure original result not a Future");
+                            return;
+                        }
+                        if (((Future<?>) original).isDone()) {
+                            XposedBridge.log(TAG + ": disclosure already completed; no replacement needed");
+                            return;
+                        }
 
                         // Google Phone 244's next transform unboxes a Boolean.
                         // The previous Future<Void>/null replacement stopped
                         // the recording chain: no Google recording was saved.
                         // Reuse the verified native completed Boolean.TRUE.
                         Object ready = AutoRecordingHook.completedTrueFuture();
-                        if (!disclosure.getReturnType().isInstance(ready)) return;
+                        if (!disclosure.getReturnType().isInstance(ready)) {
+                            XposedBridge.log(TAG + ": completed Boolean.TRUE Future unavailable or incompatible");
+                            return;
+                        }
 
                         if (!LAST_RELEASED_POLICY.compareAndSet(
                                 LAST_RELEASED_POLICY.get(), policy)) return;
@@ -70,6 +87,7 @@ final class EarlyRecordingHook {
                     } catch (Throwable e) {
                         // Fail closed. No change to Google's original Future.
                         Log.w(TAG, "Early release refused, original flow kept", e);
+                        XposedBridge.log(TAG + ": early release failed, original flow kept: " + e);
                     }
                 }
             });
