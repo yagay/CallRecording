@@ -17,6 +17,7 @@ public final class SettingsProvider extends ContentProvider {
     public static final String PREFS = "module_settings";
     public static final String AUTO = "auto_record_all";
     public static final String DEBUG = "diagnostic_logging";
+    public static final String EARLY = "early_native_recording";
     public static final String LAST_STATUS = "last_status";
     public static final String LAST_CHECK = "last_check";
     public static final String LAST_HIT = "last_hit";
@@ -36,6 +37,7 @@ public final class SettingsProvider extends ContentProvider {
             Bundle reply = new Bundle();
             reply.putBoolean(AUTO, prefs.getBoolean(AUTO, true));
             reply.putBoolean(DEBUG, prefs.getBoolean(DEBUG, false));
+            reply.putBoolean(EARLY, prefs.getBoolean(EARLY, false));
             return reply;
         }
         if ("report".equals(method)) {
