@@ -26,6 +26,7 @@ public final class AutoRecordingHook {
     private static final String POLICY_MARKER = "produceShouldStartAutomaticRecordingForContact";
     private static final AtomicBoolean INSTALLED = new AtomicBoolean();
     private static final AtomicBoolean FIRST_HIT = new AtomicBoolean();
+    private static volatile Method completedFutureFactory;
 
     private AutoRecordingHook() {}
 
@@ -65,6 +66,7 @@ public final class AutoRecordingHook {
                         }
                     }
                 });
+                completedFutureFactory = factory;
                 status("installed", "Policy hooked: " + policy);
             } catch (Throwable error) {
                 INSTALLED.set(false);
@@ -72,6 +74,22 @@ public final class AutoRecordingHook {
             }
         } catch (Throwable error) {
             status("error", "Discovery failed safely: " + error);
+        }
+    }
+
+    /** Returns a verified native completed Future<Void>, or null to fail closed. */
+    static Object completedVoidFuture() {
+        Method factory = completedFutureFactory;
+        if (factory == null) return null;
+        try {
+            Object value = factory.invoke(null, new Object[]{null});
+            if (!(value instanceof Future<?>)) return null;
+            Future<?> future = (Future<?>) value;
+            // Disclosures have no meaningful output; never feed TRUE in place of Void.
+            if (!future.isDone() || future.get() != null) return null;
+            return value;
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 
