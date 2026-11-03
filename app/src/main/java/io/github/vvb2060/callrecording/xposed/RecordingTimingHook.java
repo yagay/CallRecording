@@ -17,8 +17,9 @@ import de.robv.android.xposed.XposedBridge;
 /**
  * Observes, but never changes, Google Phone's recording startup chronology.
  *
- * Uses the user's existing "Diagnostic logging" switch. No telephone
- * numbers, contacts, audio buffers or file paths are logged.
+ * Emits small, unconditional diagnostics to both Android logcat and LSPosed
+ * module logs, including before the Application or settings provider is ready.
+ * No telephone numbers, contacts, audio buffers or file paths are logged.
  *
  * Dynamic matching works with the supplied Phone 244 DEX and fails closed
  * when the Google Phone internal method structure changes.
@@ -39,7 +40,7 @@ final class RecordingTimingHook {
     static void installCallState() {
         if (!CALL_HOOKED.compareAndSet(false, true)) return;
         try {
-            XposedBridge.hookAllMethods(Call.class, "internalUpdate", new XC_MethodHook() {
+            if (XposedBridge.hookAllMethods(Call.class, "internalUpdate", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     if (!(param.thisObject instanceof Call)) return;
@@ -59,11 +60,15 @@ final class RecordingTimingHook {
                         lastActiveCall = null;
                     }
                 }
-            });
-            event("call-state-hook-installed");
+            }).isEmpty()) {
+                event("call-state-method-unavailable");
+            } else {
+                event("call-state-hook-installed");
+            }
         } catch (Throwable error) {
             CALL_HOOKED.set(false);
             Log.w(TAG, "Cannot observe call-state transitions", error);
+            event("call-state-hook-failed-" + error.getClass().getSimpleName());
         }
     }
 
@@ -109,9 +114,8 @@ final class RecordingTimingHook {
             event("recording-pipeline-hook-installed");
         } catch (Throwable error) {
             RECORDER_HOOKED.set(false);
-            if (SettingsBridge.diagnosticsEnabled()) {
-                Log.w(TAG, "Recording pipeline discovery failed", error);
-            }
+            Log.w(TAG, "Recording pipeline discovery failed", error);
+            event("recording-pipeline-hook-failed-" + error.getClass().getSimpleName());
         }
     }
 
@@ -153,15 +157,22 @@ final class RecordingTimingHook {
         return matched.size() == 1 ? matched.iterator().next() : null;
     }
 
+    static void markModuleLoaded() {
+        event("dialer-process-hook-entry");
+    }
+
     private static void event(String name) {
-        if (!SettingsBridge.diagnosticsEnabled()) return;
         long now = SystemClock.elapsedRealtime();
         String active = connectedAt == 0 ? "n/a" : String.valueOf(now - connectedAt);
         String fromPolicy = policyAt == 0 ? "n/a" : String.valueOf(now - policyAt);
         String fromDisclosure = disclosureAt == 0 ? "n/a" : String.valueOf(now - disclosureAt);
-        Log.i(TAG, name + " elapsedMs=" + now
+        String message = name + " elapsedMs=" + now
                 + " sinceConnectedMs=" + active
                 + " sincePolicyMs=" + fromPolicy
-                + " sinceDisclosureMs=" + fromDisclosure);
+                + " sinceDisclosureMs=" + fromDisclosure;
+        // These events are intentionally unconditional. The preferences bridge
+        // can be unavailable during initial load; gating on it caused 0 KB logs.
+        Log.i(TAG, message);
+        XposedBridge.log(TAG + ": " + message);
     }
 }
