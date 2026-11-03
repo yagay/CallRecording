@@ -31,8 +31,12 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # ubuntu-latest already provides the Android SDK. Avoid setup-android@v3:
+      # its deprecated 'sdkmanager tools' install fails on current runners.
+      - name: Check Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          test -d "${ANDROID_HOME}"
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
