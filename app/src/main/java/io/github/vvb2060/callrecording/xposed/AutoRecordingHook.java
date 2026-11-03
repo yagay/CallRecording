@@ -77,16 +77,21 @@ public final class AutoRecordingHook {
         }
     }
 
-    /** Returns a verified native completed Future<Void>, or null to fail closed. */
-    static Object completedVoidFuture() {
+    /**
+     * The Google Phone 244 start-disclosure continuation consumes Boolean,
+     * not Void: Lkxn.apply (case 5) unboxes Boolean.booleanValue().
+     *
+     * Return only a verified completed Future<Boolean.TRUE>. A null result
+     * causes the continuation to fail before CallRecorder.startRecording().
+     */
+    static Object completedTrueFuture() {
         Method factory = completedFutureFactory;
         if (factory == null) return null;
         try {
-            Object value = factory.invoke(null, new Object[]{null});
+            Object value = factory.invoke(null, Boolean.TRUE);
             if (!(value instanceof Future<?>)) return null;
             Future<?> future = (Future<?>) value;
-            // Disclosures have no meaningful output; never feed TRUE in place of Void.
-            if (!future.isDone() || future.get() != null) return null;
+            if (!future.isDone() || !Boolean.TRUE.equals(future.get())) return null;
             return value;
         } catch (Throwable ignored) {
             return null;
