@@ -271,26 +271,62 @@ public class Init implements IXposedHookLoadPackage {
         }
     }
 
+    @FunctionalInterface
+    private interface HookStep {
+        void execute() throws Throwable;
+    }
+
+    /** Emit stage transitions even if Google Phone settings are inaccessible. */
+    private static void runHookStep(String name, HookStep step) {
+        long start = android.os.SystemClock.elapsedRealtime();
+        XposedBridge.log(TAG + "/Init: " + name + " begin");
+        try {
+            step.execute();
+            long millis = android.os.SystemClock.elapsedRealtime() - start;
+            XposedBridge.log(TAG + "/Init: " + name + " success durationMs=" + millis);
+        } catch (Throwable failure) {
+            long millis = android.os.SystemClock.elapsedRealtime() - start;
+            XposedBridge.log(TAG + "/Init: " + name + " FAILED durationMs="
+                    + millis + " error=" + failure);
+            XposedBridge.log(failure);
+            // One missing, changed or problematic hook must not prevent the
+            // independent native eligibility and recorder timing hooks.
+        }
+    }
+
+    private static void installHooks(ClassLoader classLoader) {
+        XposedBridge.log(TAG + "/Init: worker-start");
+        try {
+            XposedBridge.log(TAG + "/Init: dex-helper-open-begin");
+            try (var dex = new DexHelper(classLoader)) {
+                XposedBridge.log(TAG + "/Init: dex-helper-opened");
+                runHookStep("canRecordCall", () -> hookCanRecordCall(dex));
+                runHookStep("withinCrosbyGeoFence", () -> hookWithinCrosbyGeoFence(dex));
+                runHookStep("getSupportedLocale", () -> hookGetSupportedLocaleFromCountryCode(dex));
+                runHookStep("isCallRecordingCountry", () -> hookIsCallRecordingCountry(dex));
+                runHookStep("automatic-policy", () -> AutoRecordingHook.install(dex));
+                runHookStep("native-recorder-timing-and-early", () ->
+                        RecordingTimingHook.installNativePipeline(dex));
+            }
+            XposedBridge.log(TAG + "/Init: dex-helper-closed");
+        } catch (Throwable failure) {
+            XposedBridge.log(TAG + "/Init: dex-helper FAILED error=" + failure);
+            XposedBridge.log(failure);
+        } finally {
+            runHookStep("tts-synthesize", Init::hookSynthesizeToFile);
+            runHookStep("tts-dispatch", Init::hookDispatchOnInit);
+            runHookStep("tts-language", Init::hookIsLanguageAvailable);
+            runHookStep("activity-resume", Init::hookActivityOnResume);
+            XposedBridge.log(TAG + "/Init: worker-complete");
+        }
+    }
+
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (!"com.google.android.dialer".equals(lpparam.packageName)) return;
         RecordingTimingHook.markModuleLoaded();
         RecordingTimingHook.installCallState();
-        new Thread(() -> {
-            try (var dex = new DexHelper(lpparam.classLoader)) {
-                hookCanRecordCall(dex);
-                hookWithinCrosbyGeoFence(dex);
-                hookGetSupportedLocaleFromCountryCode(dex);
-                hookIsCallRecordingCountry(dex);
-                AutoRecordingHook.install(dex);
-                RecordingTimingHook.installNativePipeline(dex);
-            }
-            hookSynthesizeToFile();
-            hookDispatchOnInit();
-            hookIsLanguageAvailable();
-            hookActivityOnResume();
-            Log.d(TAG, "hook done");
-        }).start();
+        new Thread(() -> installHooks(lpparam.classLoader), "CallRecording-Init").start();
         Log.d(TAG, "handleLoadPackage done");
     }
 }
